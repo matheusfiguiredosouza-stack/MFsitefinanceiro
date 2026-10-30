@@ -3,7 +3,7 @@ import { Transaction, BudgetCategory, CATEGORIES } from '../types';
 import {
   TrendingUp, TrendingDown, Wallet, PiggyBank, LogOut,
   Plus, Trash2, BarChart3, Target, History, DollarSign,
-  ArrowUpCircle, ArrowDownCircle, CreditCard, Building2
+  ArrowUpCircle, ArrowDownCircle, CreditCard, Building2, Settings, Cloud
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import Assistant from './Assistant';
 import SpendingRing from './SpendingRing';
+import Backup from './Backup';
 
 interface DashboardProps {
   user: string;
@@ -24,6 +25,8 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
   const [savingsGoal, setSavingsGoal] = useState(0);
   const [savingsCurrent, setSavingsCurrent] = useState(0);
   const [monthlyIncome, setMonthlyIncome] = useState(0);
+  const [saved, setSaved] = useState(true);
+  const [lastSavedTime, setLastSavedTime] = useState('');
 
   // Form states
   const [newTransaction, setNewTransaction] = useState({
@@ -54,6 +57,11 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
     if (!users[user]) return;
     users[user] = { ...users[user], ...data };
     localStorage.setItem('mf_users', JSON.stringify(users));
+    // Marcar como salvo com timestamp
+    const now = new Date().toISOString();
+    localStorage.setItem(`mf_last_saved_${user}`, now);
+    setLastSavedTime(new Date(now).toLocaleTimeString('pt-BR'));
+    setSaved(true);
   };
 
   const addTransaction = () => {
@@ -161,6 +169,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
     { id: 'budget', label: 'Orçamento', icon: Target },
     { id: 'history', label: 'Histórico', icon: History },
     { id: 'investments', label: 'Investimentos', icon: Building2 },
+    { id: 'settings', label: 'Dados & Backup', icon: Settings },
   ];
 
   return (
@@ -173,6 +182,10 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
             <h1 className="text-xl font-bold text-emerald-400">MFfinanceiro</h1>
           </div>
           <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500">
+              <Cloud className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Salvo {lastSavedTime ? `às ${lastSavedTime}` : 'automaticamente'}</span>
+            </div>
             <span className="text-sm text-gray-400">Olá, <span className="text-emerald-400 font-medium">{user}</span></span>
             <button onClick={onLogout} className="flex items-center gap-1 text-sm text-gray-400 hover:text-red-400 transition-colors">
               <LogOut className="w-4 h-4" /> Sair
@@ -592,6 +605,11 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
               </ResponsiveContainer>
             </div>
           </div>
+        )}
+
+        {/* Settings/Backup Tab */}
+        {activeTab === 'settings' && (
+          <Backup user={user} />
         )}
       </main>
 
